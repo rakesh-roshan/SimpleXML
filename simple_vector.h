@@ -23,6 +23,7 @@ Vector* vector_create();
 //    }
 //    vector_release(v);
 void vector_release(Vector *v);
+void vector_deep_release(Vector *v,void(*obj_release)(void *));
 
 // Return the size of vector v
 int vector_size(Vector *v);
@@ -96,5 +97,6 @@ int vector_index_of(Vector *v, void *elem);
 //    >>> vector_index_of(v, 1, 1)
 //    => 1
 int vector_index_of_with_start(Vector *v, void *elem, int start);
+
 
 #endif

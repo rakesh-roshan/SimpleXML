@@ -4,6 +4,12 @@
 #include "simple_xml.h"
 #include "simple_vector.h"
 
+void int_release(void *i){
+    if(i!=NULL){
+        free(i);
+    }
+}
+
 void test_vector() {
   Vector *v;
   int a, b, c, i;
@@ -72,7 +78,7 @@ void test_vector() {
   assert(vector_top_front(v) == &c);
   assert(vector_size(v) == 105);
 
-  vector_release(v);
+  vector_deep_release(v,NULL);
 
   printf("PASSED Test vector1\n");
 }
@@ -112,12 +118,18 @@ void test_vector2() {
   }
 
   // release
+  vector_deep_release(v,&XMLElement_release);
+  //vector_release(v);
+
+  printf("PASSED Test vector2\n");
+  return;
   for (i = 0; i < vector_size(v); ++i) {
     XMLElement *e;
     e = vector_get_element_at(v, i);
     XMLElement_release(e);
   }
-  vector_release(v);
+  vector_deep_release(v,&int_release);
+  //vector_release(v);
 
   printf("PASSED Test vector2\n");
 }

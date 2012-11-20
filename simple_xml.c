@@ -5,6 +5,22 @@
 #include "simple_vector.h"
 #include "simple_xml.h"
 
+typedef struct StackElement {
+  XMLElement *element;
+  int depth; 
+} StackElement;
+
+static StackElement* StackElement_create(StackElement *se) {
+  se = malloc(sizeof(StackElement));
+  return se;
+}
+
+static void StackElement_release(void *e) {
+    StackElement *se = (StackElement *)e;
+    free(se);
+    se = NULL;
+} 
+
 // Initialize for XMLElement `e` with `tag_name` and `value`
 // Example
 //    >>> <programmer>Kien Nguyen Trung</programmer>
@@ -20,13 +36,14 @@ XMLElement* XMLElement_create(XMLElement *e, char* tag_name, char* value) {
 }
 
 // Release XMLElement
-void XMLElement_release(XMLElement *e) {
-  e->parent = NULL;
-  free(e->tag_name);
-  free(e->value);
-  vector_release(e->children);
-  free(e);
-  e = NULL;
+void XMLElement_release(void *e) {
+    XMLElement *xe=(XMLElement *)e;
+    xe->parent = NULL;
+    free(xe->tag_name);
+    free(xe->value);
+    vector_deep_release(xe->children,&XMLElement_release);
+    free(xe);
+    xe = NULL;
 }
 
 #define BEGIN_TAG_TOKEN '<'
@@ -109,11 +126,11 @@ static XMLParser* XMLParser_create(XMLParser *p) {
 
 // Release a parse
 static void XMLParser_release(XMLParser *p) {
-  vector_release(p->element_stack);
-  vector_release(p->value_stack);
-  vector_release(p->tag_stack);
-  free(p);
-  p = NULL;
+    vector_deep_release(p->element_stack,&StackElement_release);
+    vector_deep_release(p->value_stack,NULL);
+    vector_deep_release(p->tag_stack,NULL);
+    free(p);
+    p = NULL;
 }
 
 // Return text token from `from` position to `to` position in `input`
@@ -201,21 +218,6 @@ static XMLToken* parser_get_next_token(XMLParser *parser) {
   return parser_get_text_token(parser, begin_pos, parser->_pos - 1);  
 }
 
-
-typedef struct StackElement {
-  XMLElement *element;
-  int depth; 
-} StackElement;
-
-static StackElement* StackElement_create(StackElement *se) {
-  se = malloc(sizeof(StackElement));
-  return se;
-}
-
-static void StackElement_release(StackElement *se) {
-  free(se);
-  se = NULL;
-} 
 
 // Parse xml from text
 // Return XMLElement represent for input
@@ -316,7 +318,7 @@ XMLElement* parse_xml_from_text(char *text) {
 
   StackElement* stackElem = (StackElement *) vector_top_back(parser->element_stack);
   XMLElement *xmlElem = stackElem->element;
-  StackElement_release(stackElem);
+  //StackElement_release(stackElem);
   XMLParser_release(parser);
   return xmlElem;
 }

@@ -35,6 +35,19 @@ void vector_release(Vector *v) {
   free(v);
 }
 
+void vector_deep_release(Vector *v,void(*obj_release)(void *)) { 
+  vector_validated(v);
+  int i;
+  if(obj_release!=NULL){
+      for (i = 0; i < vector_size(v); ++i) {
+          void* elem = vector_get_element_at(v, i);
+          obj_release(elem);
+      }
+  }
+  free(v->_data);
+  free(v);
+}
+
 // Return the size of vector v
 int vector_size(Vector *v) { 
   vector_validated(v);
