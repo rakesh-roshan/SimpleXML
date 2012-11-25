@@ -1,3 +1,6 @@
 *.o
 *.a
+*.gcda
+*.gcno
+*.gcov
 test
